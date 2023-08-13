@@ -1,0 +1,26 @@
+{
+  "name": "gpt_audio_chat",
+  "version": "1.0.0",
+  "description": "a gui that takes a users input from a microphone, send to chatgpt and plays gpts response as audio",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ben-23-96/gpt_audio_chat.git"
+  },
+  "author": "ben speakman",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/speech": "^6.0.1",
+    "debug": "^4.3.4",
+    "dotenv": "^16.3.1",
+    "node-record-lpcm16": "^1.0.1",
+    "pcm-volume": "^1.0.0"
+  },
+  "devDependencies": {
+    "electron": "^25.5.0"
+  }
+}
