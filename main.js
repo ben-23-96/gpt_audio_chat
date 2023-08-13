@@ -1,6 +1,6 @@
 // Import required modules
 const { app, ipcMain, BrowserWindow } = require('electron');  // Electron core modules
-const startRecording = require('./speechToText');  // Custom module for speech-to-text functionality
+const convertMicAudioToText = require('./core/micAudioToText');  // Custom module for speech-to-text functionality
 const path = require('path');  // Node.js path module
 
 /**
@@ -16,8 +16,8 @@ const createWindow = () => {
         }
     });
 
-    // IPC handler to start recording when 'record' event is received
-    ipcMain.handle('record', startRecording);
+    // IPC handler to start recording microphone audio and convert it to text when 'record' event is received
+    ipcMain.handle('record', convertMicAudioToText);
 
     // IPC listener for 'audio-transcription-to-main' event from speechToText
     ipcMain.on('audio-transcription-to-main', (event, transcription) => {
