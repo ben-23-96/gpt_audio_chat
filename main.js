@@ -12,7 +12,7 @@ const createWindow = () => {
         width: 800,
         height: 600,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js')  // Path to the preload script
+            preload: path.join(__dirname, 'electron/preload.js')  // Path to the preload script
         }
     });
 
@@ -28,7 +28,7 @@ const createWindow = () => {
     });
 
     // Load the main HTML file into the window
-    win.loadFile('index.html');
+    win.loadFile('electron/index.html');
 };
 
 // When Electron app is ready, create the main window
