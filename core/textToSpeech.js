@@ -2,14 +2,47 @@
 require('dotenv').config();
 
 // Import required modules
-const fs = require('fs');
 const textToSpeech = require('@google-cloud/text-to-speech');
+const { ipcMain } = require('electron');
 
-// Create a writable stream to append audio content to 'output.mp3'
-const audioStream = fs.createWriteStream('output.mp3', { flags: 'a' });
 
 // Initialize the Google Cloud Text-to-Speech client
 const textToSpeechClient = new textToSpeech.TextToSpeechClient();
+
+// Initialize an empty queue to hold text that needs to be converted to audio
+let textQueue = [];
+
+// Flag to indicate whether the queue is currently being processed
+let isProcessing = false;
+
+/**
+ * Processes the text queue by converting each text to audio.
+ * If the queue is empty, it ends the audio stream.
+ * If the queue is already being processed, it does nothing.
+ */
+async function processQueue() {
+    // If the queue is already being processed, exit the function
+    if (isProcessing) return;
+
+    // If the queue is empty exit the function
+    if (textQueue.length === 0) {
+        return;
+    }
+
+    console.log(textQueue)
+
+    // Set the processing flag to true
+    isProcessing = true;
+
+    // Return and remove the first text from queue
+    const text = textQueue.shift();
+    // Convert text to audio
+    convertTextToAudio(text);
+
+    // Reset the processing flag to false
+    isProcessing = false;
+}
+
 
 /**
  * Converts the provided text into audio using Google Cloud Text-to-Speech API.
@@ -34,13 +67,14 @@ async function convertTextToAudio(text) {
     // Send the request to the Text-to-Speech API and get the response
     const [response] = await textToSpeechClient.synthesizeSpeech(request);
 
-    // Append the audio content from the response to 'output.mp3'
-    audioStream.write(response.audioContent);
-    console.log(`Appended audio content for: ${text}`);
+    console.log('API Response:', response);
+
+    // send reponse containing audio buffer to main.js where it can be sent to frontend renderer.js
+    ipcMain.emit('gpt-res-sentence-audio-buffer-to-main', null, response)
 }
 
-// Export the audio stream and the convertTextToAudio function
 module.exports = {
-    audioStream: audioStream,
-    convertTextToAudio: convertTextToAudio
+    textQueue: textQueue,
+    processQueue: processQueue,
+    convertTextToAudio: convertTextToAudio,
 };

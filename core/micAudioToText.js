@@ -24,6 +24,8 @@ async function convertMicAudioToText() {
         interimResults: false,  // Only final results are required
     };
 
+    let completeMicrophoneTranscript = ""
+
     // Set a timeout to end recording after 15 seconds of inital silence
     let silenceTimeout = setTimeout(() => {
         audioStream.end();
@@ -40,6 +42,7 @@ async function convertMicAudioToText() {
 
                 // Send the transcription to the main via IPC where it will be sent to renderer
                 ipcMain.emit('audio-transcription-to-main', null, transcription);
+                completeMicrophoneTranscript += transcription
 
                 // Clear the previous silence timeout and set a new one for 4 seconds
                 clearTimeout(silenceTimeout);
@@ -56,7 +59,10 @@ async function convertMicAudioToText() {
         .on('end', () => {
             // Clear the silence timeout when the recognition stream ends
             clearTimeout(silenceTimeout);
+            // Send complete audio transcript to be sent as prompt to gpt 
+            ipcMain.emit('audio-transcription-complete', null, completeMicrophoneTranscript)
             console.log('ended');
+            console.log('micAudioToText full transcript:\n', completeMicrophoneTranscript)
         });
 
     // Start recording audio with the specified configuration

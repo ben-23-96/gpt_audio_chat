@@ -21,5 +21,16 @@ contextBridge.exposeInMainWorld(
             callback(transcription);  // Execute the provided callback with the received transcription
         });
     },
+
+    onAudioBuffer: (callback) => {
+        ipcRenderer.on('gpt-res-sentence-audio-buffer-to-renderer', (event, audioBuffer) => {
+            console.log("Received in renderer:", audioBuffer);
+            callback(audioBuffer);  // Execute the provided callback with the received transcription
+        });
+    },
+
+    notifyAudioPlaybackFinished: () => {
+        ipcRenderer.send('audio-playback-finished');
+    }
 }
 );
