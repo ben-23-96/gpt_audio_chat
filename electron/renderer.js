@@ -15,26 +15,21 @@ let audioQueue = [];
 let isPlaying = false;
 
 window.electronAPI.onAudioBuffer(async (audioData) => {
-    // Decode the audio data and add it to the queue
-    const audioBuffer = await audioContext.decodeAudioData(audioData.audioContent.buffer);
-    audioQueue.push(audioBuffer);
-    window.electronAPI.notifyAudioPlaybackFinished()
+    // add audio buffer to queue
+    audioQueue.push(audioData);
     // If not currently playing, start playback
     if (!isPlaying) {
         playAudio();
     }
 });
 
-function playAudio() {
-    if (audioQueue.length === 0) {
-        isPlaying = false;
-        return;
-    }
+async function playAudio() {
 
     isPlaying = true;
-    const buffer = audioQueue.shift();
+    const audioData = audioQueue.shift();
+    const audioBuffer = await audioContext.decodeAudioData(audioData.audioContent.buffer);
     const source = audioContext.createBufferSource();
-    source.buffer = buffer;
+    source.buffer = audioBuffer;
     source.connect(audioContext.destination);
     source.start(0);
 
@@ -44,7 +39,6 @@ function playAudio() {
             playAudio();
         } else {
             isPlaying = false;
-            //electronBridge.notifyAudioPlaybackFinished();
         }
     };
 }

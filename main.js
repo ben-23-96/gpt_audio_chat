@@ -4,7 +4,7 @@ require('dotenv').config();
 const { app, ipcMain, BrowserWindow } = require('electron');  // Electron core modules
 const convertMicAudioToText = require('./core/micAudioToText');  // Custom module for speech-to-text functionality
 const generateGPTResponseAudio = require('./core/gptAudioResponse')
-const { processQueue } = require('./core/textToSpeech')
+const { textQueue, processQueue } = require('./core/textToSpeech')
 const path = require('path');  // Node.js path module
 
 /**
@@ -39,10 +39,6 @@ const createWindow = () => {
     ipcMain.on('gpt-res-sentence-audio-buffer-to-main', (event, audioBuffer) => {
         console.log('in main', audioBuffer)
         win.webContents.send('gpt-res-sentence-audio-buffer-to-renderer', audioBuffer)
-    })
-
-    ipcMain.on('audio-playback-finished', (event) => {
-        processQueue()
     })
 
     // Load the main HTML file into the window

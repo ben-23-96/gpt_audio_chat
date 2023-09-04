@@ -37,10 +37,13 @@ async function processQueue() {
     // Return and remove the first text from queue
     const text = textQueue.shift();
     // Convert text to audio
-    convertTextToAudio(text);
+    await convertTextToAudio(text);
 
     // Reset the processing flag to false
     isProcessing = false;
+
+    // process next item in queue with recursive call
+    processQueue()
 }
 
 

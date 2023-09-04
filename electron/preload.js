@@ -28,9 +28,5 @@ contextBridge.exposeInMainWorld(
             callback(audioBuffer);  // Execute the provided callback with the received transcription
         });
     },
-
-    notifyAudioPlaybackFinished: () => {
-        ipcRenderer.send('audio-playback-finished');
-    }
 }
 );

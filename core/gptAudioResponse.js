@@ -73,13 +73,9 @@ async function generateGPTResponseAudio(text) {
                     // If sentence-ending character, add sentence to the queue to be converted to audio and clear sentenceText
                     if (endOfSentenceCharacters(sentenceText)) {
                         console.log('To be sent to text to speech:', sentenceText);
-                        // add sentence to queue and process queue
-                        if (textQueue.length === 0) {
-                            textQueue.push(sentenceText);
-                            processQueue()
-                        } else {
-                            textQueue.push(sentenceText);
-                        }
+                        // add sentence to queue and process queue and clear sentence text
+                        textQueue.push(sentenceText)
+                        processQueue()
                         sentenceText = "";
                     }
                 }
