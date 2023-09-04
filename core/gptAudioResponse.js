@@ -75,8 +75,8 @@ async function generateGPTResponseAudio(text) {
                         console.log('To be sent to text to speech:', sentenceText);
                         // add sentence to queue and process queue and clear sentence text
                         textQueue.push(sentenceText)
-                        processQueue()
                         sentenceText = "";
+                        processQueue()
                     }
                 }
             });

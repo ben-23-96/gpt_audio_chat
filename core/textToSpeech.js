@@ -43,7 +43,7 @@ async function processQueue() {
     isProcessing = false;
 
     // process next item in queue with recursive call
-    processQueue()
+    await processQueue()
 }
 
 
