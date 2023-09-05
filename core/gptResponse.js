@@ -70,7 +70,7 @@ class ChatGPTResponse {
                         }
 
                         // If sentence-ending character, add sentence to the queue to be converted to audio and clear sentenceText
-                        if (endOfSentenceCharacters(this.sentenceText)) {
+                        if (this.endOfSentenceCharacters(this.sentenceText)) {
                             console.log('To be sent to text to speech:', this.sentenceText);
                             // add sentence to queue and process queue and clear sentence text
                             this.textToSpeech.textQueue.push(this.sentenceText)
