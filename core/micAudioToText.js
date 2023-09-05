@@ -41,7 +41,7 @@ async function convertMicAudioToText() {
                 console.log('speechToTextOutput:  ', transcription);
 
                 // Send the transcription to the main via IPC where it will be sent to renderer
-                ipcMain.emit('audio-transcription-to-main', null, transcription);
+                ipcMain.emit('mic-audio-transcription-to-main', null, transcription);
                 completeMicrophoneTranscript += transcription
 
                 // Clear the previous silence timeout and set a new one for 4 seconds
@@ -60,7 +60,7 @@ async function convertMicAudioToText() {
             // Clear the silence timeout when the recognition stream ends
             clearTimeout(silenceTimeout);
             // Send complete audio transcript to be sent as prompt to gpt 
-            ipcMain.emit('audio-transcription-complete', null, completeMicrophoneTranscript)
+            ipcMain.emit('mic-audio-transcription-complete', null, completeMicrophoneTranscript)
             console.log('ended');
             console.log('micAudioToText full transcript:\n', completeMicrophoneTranscript)
         });

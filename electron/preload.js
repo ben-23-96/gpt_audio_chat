@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld(
      * Sets up a listener in the renderer process for transcriptions from the main process.
      */
     onTranscription: (callback) => {
-        ipcRenderer.on('audio-transcription-to-renderer', (event, transcription) => {
+        ipcRenderer.on('mic-audio-transcription-to-renderer', (event, transcription) => {
             console.log("Received in renderer:", transcription);
             callback(transcription);  // Execute the provided callback with the received transcription
         });
