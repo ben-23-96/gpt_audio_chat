@@ -4,16 +4,9 @@ require('dotenv').config();
 const TextToSpeech = require('./textToSpeech');
 const { ConversationChain } = require("langchain/chains");
 const { ChatOpenAI } = require("langchain/chat_models/openai");
-const {
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-    MessagesPlaceholder,
-} = require("langchain/prompts");
+const { PromptTemplate } = require("langchain/prompts");
 const { CallbackManager } = require('langchain/callbacks');
-const { BufferMemory } = require("langchain/memory");
-const { MemoryVectorStore } = require("langchain/vectorstores/memory");
-const { OpenAIEmbeddings } = require("langchain/embeddings/openai");
+const { ConversationSummaryMemory, } = require("langchain/memory");
 
 class ChatGPTResponse {
     constructor() {
@@ -21,15 +14,26 @@ class ChatGPTResponse {
         this.textToSpeech = new TextToSpeech()
         // attribute to accumulate received text
         this.sentenceText = ""
+        // chat memory store that summarizes previous messages
+        this.memory = new ConversationSummaryMemory({
+            memoryKey: "chat_history",
+            llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+        });
     }
 
+    /**
+    * Uses langchain to stream gpt chat responses with conversation memory.
+    * The text is accumulated into sentences, after which it's added to a queue to be converted to audio.
+    */
     async generateResponseAudio({ prompt }) {
+
+        // function to be called on chatgpt stream response 
         const callbackManager = CallbackManager.fromHandlers({
-            // Use an arrow function to capture the `this` context
             handleLLMNewToken: async (token) => {
                 console.log(token);
+                // add streamed response to sentence
                 this.sentenceText += token;
-
+                // If sentence-ending character, add sentence to the queue to be converted to audio and clear sentenceText
                 if (this.endOfSentenceCharacters(this.sentenceText)) {
                     console.log('To be sent to text to speech:', this.sentenceText);
                     this.textToSpeech.textQueue.push(this.sentenceText);
@@ -38,28 +42,27 @@ class ChatGPTResponse {
                 }
             }
         })
+        // create prompt template to be sent to gpt
+        const chatPrompt =
+            PromptTemplate.fromTemplate(`You are a friendly assistant.
 
-        const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-            SystemMessagePromptTemplate.fromTemplate(
-                "You are a friendly assistant."
-            ),
-            //new MessagesPlaceholder("history"),
-            HumanMessagePromptTemplate.fromTemplate("{input}"),
-        ]);
+            Current conversation:
+            {chat_history}
+            Human: {input}
+            AI:`);
 
-        const chat = new ChatOpenAI({ streaming: true, callbackManager, });
+        const chat = new ChatOpenAI({ streaming: true, callbackManager });
 
         const chain = new ConversationChain({
             prompt: chatPrompt,
             llm: chat,
+            memory: this.memory
         });
 
-        const res = await chain.call({
-            input: prompt,
+        const aiResponse = await chain.call({
+            input: prompt
         });
 
-        console.log(res)
-        console.log('testing')
         this.sentenceText = ""
     }
 
@@ -68,6 +71,13 @@ class ChatGPTResponse {
      */
     endOfSentenceCharacters(str) {
         return /[.!?:]/.test(str);
+    }
+
+    /**
+     * Clears the chat memory
+     */
+    async clearChatMemory() {
+        await this.memory.clear()
     }
 }
 
