@@ -1,89 +1,69 @@
 // Load environment variables from a .env file
 require('dotenv').config();
 
-// Import required modules
-const axios = require('axios');
 const TextToSpeech = require('./textToSpeech');
-
-// Define the API endpoint and retrieve the API key from environment variables
-const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
-const API_KEY = process.env.OPENAI_API_KEY;
+const { ConversationChain } = require("langchain/chains");
+const { ChatOpenAI } = require("langchain/chat_models/openai");
+const { PromptTemplate } = require("langchain/prompts");
+const { CallbackManager } = require('langchain/callbacks');
+const { ConversationSummaryMemory, } = require("langchain/memory");
 
 class ChatGPTResponse {
     constructor() {
         // instance of the TextToSpeech class to be used converting the gpt text response to audio
         this.textToSpeech = new TextToSpeech()
-        //  attribute to accumulate received text
+        // attribute to accumulate received text
         this.sentenceText = ""
+        // chat memory store that summarizes previous messages
+        this.memory = new ConversationSummaryMemory({
+            memoryKey: "chat_history",
+            llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+        });
     }
 
     /**
-    * Streams responses from the OpenAI GPT-3 API and processes the received text.
+    * Uses langchain to stream gpt chat responses with conversation memory.
     * The text is accumulated into sentences, after which it's added to a queue to be converted to audio.
     */
     async generateResponseAudio({ prompt }) {
 
-        // Define headers for the API request
-        const headers = {
-            'Authorization': `Bearer ${API_KEY}`,
-            'Content-Type': 'application/json',
-        };
+        // function to be called on chatgpt stream response 
+        const callbackManager = CallbackManager.fromHandlers({
+            handleLLMNewToken: async (token) => {
+                console.log(token);
+                // add streamed response to sentence
+                this.sentenceText += token;
+                // If sentence-ending character, add sentence to the queue to be converted to audio and clear sentenceText
+                if (this.endOfSentenceCharacters(this.sentenceText)) {
+                    console.log('To be sent to text to speech:', this.sentenceText);
+                    this.textToSpeech.textQueue.push(this.sentenceText);
+                    this.sentenceText = "";
+                    this.textToSpeech.processQueue();
+                }
+            }
+        })
+        // create prompt template to be sent to gpt
+        const chatPrompt =
+            PromptTemplate.fromTemplate(`You are a friendly assistant.
 
-        // Define the data payload for the API request
-        const data = {
-            model: 'gpt-3.5-turbo',
-            messages: [
-                { role: 'user', content: prompt }
-            ],
-            stream: true
-        };
+            Current conversation:
+            {chat_history}
+            Human: {input}
+            AI:`);
 
-        // Make a POST request to the OpenAI API
-        axios.post(API_ENDPOINT, data, { headers: headers, responseType: 'stream' })
-            .then(response => {
-                // Process the streamed data
-                response.data.on('data', chunk => {
-                    // Split the chunk into the data for a single word
-                    const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
+        const chat = new ChatOpenAI({ streaming: true, callbackManager });
 
-                    for (const line of lines) {
-                        // Remove the "data: " prefix from each line
-                        const chunkJsonString = line.replace(/^data: /, '');
+        const chain = new ConversationChain({
+            prompt: chatPrompt,
+            llm: chat,
+            memory: this.memory
+        });
 
-                        // If the line indicates the end of the stream, process any remaining text
-                        if (chunkJsonString === '[DONE]') {
-                            console.log('Stream complete.');
-                            if (this.sentenceText) {
-                                //console.log('To be sent to text to speech:', sentenceText);
-                                this.sentenceText = "";
-                            }
-                            return;
-                        }
+        const aiResponse = await chain.call({
+            input: prompt
+        });
 
-                        // Parse the JSON string to extract the content
-                        const parsedChunk = JSON.parse(chunkJsonString);
-                        const wordText = parsedChunk.choices[0].delta.content;
-
-                        // append words into sentences
-                        if (wordText) {
-                            this.sentenceText += wordText;
-                        }
-
-                        // If sentence-ending character, add sentence to the queue to be converted to audio and clear sentenceText
-                        if (this.endOfSentenceCharacters(this.sentenceText)) {
-                            console.log('To be sent to text to speech:', this.sentenceText);
-                            // add sentence to queue and process queue and clear sentence text
-                            this.textToSpeech.textQueue.push(this.sentenceText)
-                            this.sentenceText = "";
-                            this.textToSpeech.processQueue()
-                        }
-                    }
-                });
-            })
-            .catch(error => {
-                // Log any errors that occur during the API request
-                console.error('Error:', error);
-            });
+        this.sentenceText = ""
     }
 
     /**
@@ -91,6 +71,13 @@ class ChatGPTResponse {
      */
     endOfSentenceCharacters(str) {
         return /[.!?:]/.test(str);
+    }
+
+    /**
+     * Clears the chat memory
+     */
+    async clearChatMemory() {
+        await this.memory.clear()
     }
 }
 
