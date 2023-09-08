@@ -15,6 +15,13 @@ class ChatGPTResponse {
         this.textToSpeech = new TextToSpeech()
         //  attribute to accumulate received text
         this.sentenceText = ""
+        this.conversationHistory = [{ "role": "system", "content": "You are a helpful assistant. Please provide concise and brief answers to ensure efficient use of tokens." }];
+        this.gptFullResponse = ""
+    }
+
+    addMessageToConversationHistory({ role, content }) {
+        this.conversationHistory.push({ role, content });
+        console.log(this.conversationHistory)
     }
 
     /**
@@ -23,6 +30,7 @@ class ChatGPTResponse {
     */
     async generateResponseAudio({ prompt }) {
 
+        this.addMessageToConversationHistory({ role: 'user', content: prompt })
         // Define headers for the API request
         const headers = {
             'Authorization': `Bearer ${API_KEY}`,
@@ -32,9 +40,7 @@ class ChatGPTResponse {
         // Define the data payload for the API request
         const data = {
             model: 'gpt-3.5-turbo',
-            messages: [
-                { role: 'user', content: prompt }
-            ],
+            messages: this.conversationHistory,
             stream: true
         };
 
@@ -55,7 +61,10 @@ class ChatGPTResponse {
                             console.log('Stream complete.');
                             if (this.sentenceText) {
                                 //console.log('To be sent to text to speech:', sentenceText);
+                                this.gptFullResponse += this.sentenceText
                                 this.sentenceText = "";
+                                this.addMessageToConversationHistory({ role: 'assistant', content: this.gptFullResponse })
+                                this.gptFullResponse = ""
                             }
                             return;
                         }
@@ -74,6 +83,7 @@ class ChatGPTResponse {
                             console.log('To be sent to text to speech:', this.sentenceText);
                             // add sentence to queue and process queue and clear sentence text
                             this.textToSpeech.textQueue.push(this.sentenceText)
+                            this.gptFullResponse += this.sentenceText
                             this.sentenceText = "";
                             this.textToSpeech.processQueue()
                         }
