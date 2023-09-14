@@ -9,15 +9,17 @@ const { CallbackManager } = require('langchain/callbacks');
 const { ConversationSummaryMemory, } = require("langchain/memory");
 
 class ChatGPTResponse {
-    constructor() {
+    constructor(apiKey) {
         // instance of the TextToSpeech class to be used converting the gpt text response to audio
         this.textToSpeech = new TextToSpeech()
         // attribute to accumulate received text
         this.sentenceText = ""
+        // user openai api key
+        this.apiKey = apiKey
         // chat memory store that summarizes previous messages
         this.memory = new ConversationSummaryMemory({
             memoryKey: "chat_history",
-            llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+            llm: new ChatOpenAI({ openAIApiKey: apiKey, modelName: "gpt-3.5-turbo", temperature: 0 }),
         });
     }
 
@@ -51,7 +53,7 @@ class ChatGPTResponse {
             Human: {input}
             AI:`);
 
-        const chat = new ChatOpenAI({ streaming: true, callbackManager });
+        const chat = new ChatOpenAI({ openAIApiKey: this.apiKey, streaming: true, callbackManager });
 
         const chain = new ConversationChain({
             prompt: chatPrompt,

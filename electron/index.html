@@ -3,12 +3,21 @@
 
 <head>
     <title>Electron GUI</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
 <body>
-    <button id="startRecording">Start Recording</button>
-    <div id="transcriptionOutput"></div>
-    <audio controls></audio>
+    <div id="api-key-form-container">
+        <form id="api-form">
+            <input type="text" id="api-key" placeholder="Enter API Key">
+            <button type="submit">Save</button>
+        </form>
+    </div>
+    <div id="main-gui-container">
+        <button id="startRecording">Start Recording</button>
+        <div id="transcriptionOutput"></div>
+        <audio controls></audio>
+    </div>
     <script src="./renderer.js"></script>
 </body>
 
