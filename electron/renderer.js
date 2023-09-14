@@ -43,7 +43,39 @@ async function playAudio() {
     };
 }
 
+/***
+ * Load either form to submit openai api key or main gui page depending on if apikey alreasy exists on page load
+ */
+document.addEventListener('DOMContentLoaded', async () => {
+    const apiFormContainer = document.getElementById('api-key-form-container');
+    const mainGuiContainer = document.getElementById('main-gui-container');
+    const form = document.getElementById('api-form');
 
+    // Check for existing API key
+    const existingApiKey = await window.electronAPI.getApiKey()
+
+    if (existingApiKey) {
+        // If API key exists, hide form and show main GUI
+        mainGuiContainer.style.display = 'block';
+    } else {
+        // If API key doesn't exist, show form
+        apiFormContainer.style.display = 'block';
+    }
+
+    // Handle form submission
+    form.addEventListener('submit', async (e) => {
+        console.log('test')
+        e.preventDefault();
+        const apiKey = document.getElementById('api-key').value;
+
+        // set the API key
+        await window.electronAPI.setApiKey(apiKey);
+
+        // Hide form and show main GUI after saving API key
+        apiFormContainer.style.display = 'none';
+        mainGuiContainer.style.display = 'block';
+    });
+});
 
 
 
