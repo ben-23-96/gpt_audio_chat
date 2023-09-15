@@ -48,6 +48,11 @@ const createWindow = () => {
     // IPC handler to start recording microphone audio and convert it to text when 'record' event is received
     ipcMain.handle('record', convertMicAudioToText);
 
+    // IPC handler to start a new conversation, clears the chat memory
+    ipcMain.handle('new-conversation', async (event, arg) => {
+        chatGptResponse.clearChatMemory()
+    })
+
     // IPC listener for 'mic-audio-transcription-to-main' event from speechToText
     ipcMain.on('mic-audio-transcription-to-main', (event, transcription) => {
         console.log("Received in main:", transcription);

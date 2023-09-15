@@ -27,6 +27,11 @@ contextBridge.exposeInMainWorld(
     },
 
     /**
+     * Sends a request to the main process to clear the conversation history
+     */
+    newConversation: () => ipcRenderer.invoke('new-conversation'),
+
+    /**
      * Sets up a listener in the renderer process for transcriptions from the main process to be transcriped in the gui.
      */
     onTranscription: (callback) => {

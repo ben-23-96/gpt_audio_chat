@@ -1,7 +1,11 @@
 // Add an event listener to the element with the ID 'startRecording'
 // When the element is clicked, the record function from the electronAPI is triggered
-document.getElementById('startRecording').addEventListener('click', () => {
+document.getElementById('startRecordingButton').addEventListener('click', () => {
     window.electronAPI.record();
+});
+
+document.getElementById('newConversationButton').addEventListener('click', () => {
+    window.electronAPI.newConversation();
 });
 
 // Set up a listener for transcriptions from the electronAPI
