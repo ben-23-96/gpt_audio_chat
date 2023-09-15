@@ -1,19 +1,3 @@
-// Add an event listener to the element with the ID 'startRecording'
-// When the element is clicked, the record function from the electronAPI is triggered
-document.getElementById('startRecordingButton').addEventListener('click', () => {
-    window.electronAPI.record();
-});
-
-document.getElementById('newConversationButton').addEventListener('click', () => {
-    window.electronAPI.newConversation();
-});
-
-// Set up a listener for transcriptions from the electronAPI
-// When a transcription is received, it's appended to the element with the ID 'transcriptionOutput'
-window.electronAPI.onTranscription((transcription) => {
-    document.getElementById('transcriptionOutput').innerText += transcription;
-});
-
 /***
  * Load either form to submit openai api key or main gui page depending on if apikey alreasy exists on page load
  */
@@ -71,6 +55,10 @@ class AudioPlayer {
         // Get the canvas element and its context for visualization
         this.canvas = document.getElementById('canvas');
         this.canvasCtx = this.canvas.getContext('2d');
+
+        // Initialize variables for stream for mic audio to be used for the visualizer
+        this.micStream = null
+        this.micMediaStreamSource = null
     }
 
     /**
@@ -170,14 +158,69 @@ class AudioPlayer {
         // Start drawing
         draw();
     }
+
+    /**
+     * Initialize microphone and connect it to the audio context.
+     */
+    async visualizeMicAudio() {
+        try {
+            // Get the media stream from the microphone
+            this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // Create a media stream source
+            this.micMediaStreamSource = this.audioContext.createMediaStreamSource(this.micStream);
+
+            // Connect the media stream source to the analyser
+            this.micMediaStreamSource.connect(this.analyser);
+
+            // Start the visualizer
+            this.visualizer();
+        } catch (err) {
+            console.error('Error initializing microphone:', err);
+        }
+    }
+
+    /**
+     * Stop the microphone and disconnect it from the audio context.
+     */
+    stopVisualizeMicAudio() {
+        // Stop each audio track in the stream
+        if (this.micStream) {
+            this.micStream.getAudioTracks().forEach(track => track.stop());
+        }
+
+        // Disconnect the media stream source from the analyser if it exists
+        if (this.micMediaStreamSource) {
+            this.micMediaStreamSource.disconnect();
+        }
+    }
 }
 
 
 // create instance of AudioPlayer class
 const audioPlayer = new AudioPlayer()
 
+// Add an event listener to the element with the ID 'startRecording'
+// When the element is clicked, the record function from the electronAPI is triggered
+document.getElementById('startRecordingButton').addEventListener('click', () => {
+    window.electronAPI.record();
+    audioPlayer.visualizeMicAudio()
+});
+
+document.getElementById('newConversationButton').addEventListener('click', () => {
+    window.electronAPI.newConversation();
+});
+
+// Set up a listener for transcriptions from the electronAPI
+// When a transcription is received, it's appended to the element with the ID 'transcriptionOutput'
+window.electronAPI.onTranscription((transcription) => {
+    document.getElementById('transcriptionOutput').innerText += transcription;
+});
+
+
 // Handle audio buffer when recieved from main process
 window.electronAPI.onAudioBuffer(async (audioData) => {
+    audioPlayer.stopVisualizeMicAudio()
     // add audio buffer to queue
     audioPlayer.audioQueue.push(audioData);
     // If not currently playing, start playback
