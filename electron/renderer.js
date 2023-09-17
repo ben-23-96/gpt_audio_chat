@@ -86,7 +86,7 @@ class AudioPlayer {
         source.start(0);
 
         // Start the visualizer
-        this.visualizer();
+        this.visualizer({ isUser: false });
 
         // Event handler for when the audio finishes playing
         source.onended = () => {
@@ -103,7 +103,7 @@ class AudioPlayer {
     /**
      * Visualize the audio data on a canvas.
      */
-    visualizer() {
+    visualizer({ isUser }) {
         // Get canvas dimensions
         let WIDTH = this.canvas.width;
         let HEIGHT = this.canvas.height;
@@ -118,6 +118,16 @@ class AudioPlayer {
         // Clear the canvas
         this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
 
+        let barColour;
+        // Set the barColour function
+        if (isUser) {
+            // Green for user
+            barColour = (barHeight) => `rgb(50,${barHeight + 100},50)`;
+        } else {
+            // Purple for AI
+            barColour = (barHeight) => `rgb(${barHeight + 100},50,${barHeight + 100})`;
+        }
+
         // Function to draw the visualization
         const draw = () => {
             // Request animation frame for smooth visualization
@@ -127,7 +137,7 @@ class AudioPlayer {
             this.analyser.getByteFrequencyData(dataArray);
 
             // Draw the background
-            this.canvasCtx.fillStyle = "rgb(0, 0, 0)";
+            this.canvasCtx.fillStyle = "#f8fa91";
             this.canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
 
             // Calculate the bar width
@@ -140,7 +150,7 @@ class AudioPlayer {
                 barHeight = dataArray[i];
 
                 // Set the color based on the bar height
-                this.canvasCtx.fillStyle = "rgb(" + (barHeight + 100) + ",50,50)";
+                this.canvasCtx.fillStyle = barColour(barHeight)
 
                 // Draw the bar
                 this.canvasCtx.fillRect(
@@ -174,7 +184,7 @@ class AudioPlayer {
             this.micMediaStreamSource.connect(this.analyser);
 
             // Start the visualizer
-            this.visualizer();
+            this.visualizer({ isUser: true });
         } catch (err) {
             console.error('Error initializing microphone:', err);
         }
