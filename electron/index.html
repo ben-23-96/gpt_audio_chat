@@ -3,23 +3,31 @@
 
 <head>
     <title>Electron GUI</title>
+    <!-- Add Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
-<body>
-    <div id="api-key-form-container">
-        <form id="api-form">
-            <input type="text" id="api-key" placeholder="Enter API Key">
-            <button type="submit">Save</button>
+<body class="m-5 d-flex flex-column align-items-center justify-content-center">
+    <div id="api-key-form-container" class="text-center">
+        <h2>API Key Configuration</h2>
+        <p class="fs-2">To use this application, please enter your OpenAI API key below. If you don't have
+            one,
+            you can get it <a href="https://platform.openai.com/" target="_blank">here</a>, in manage API keys under
+            your account.</p>
+        <p id="api-key-error-message"></p>
+        <form id="api-form" class="form-inline justify-content-center">
+            <input type="text" id="api-key" placeholder="Enter API Key" class="form-control mr-2">
+            <button type="submit" class="btn btn-primary">Save</button>
         </form>
     </div>
-    <div id="main-gui-container">
-        <button id="startRecordingButton">Start Recording</button>
-        <div id="transcriptionOutput"></div>
+    <div id="main-gui-container" class="text-center mt-4">
+        <button id="newConversationButton" class="btn btn-info btn-lg mt-4">New Conversation Memory</button>
+        <div id="transcriptionOutput" class="mt-4"></div>
         <audio controls></audio>
-        <button id="newConversationButton">New Conversation</button>
+        <button id="startRecordingButton" class="btn btn-success btn-lg">Record Message</button>
     </div>
-    <div>
+    <div class="text-center mt-4">
         <canvas id="canvas"></canvas>
     </div>
     <script src="./renderer.js"></script>
