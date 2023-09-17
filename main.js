@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 // Import required modules
-const { app, ipcMain, BrowserWindow } = require('electron');  // Electron core modules
+const { app, ipcMain, BrowserWindow, shell } = require('electron');  // Electron core modules
 const convertMicAudioToText = require('./core/micAudioToText');  // Custom module for speech-to-text functionality
 const ChatGPTResponse = require('./core/gptResponse')
 const path = require('path');  // Node.js path module
@@ -20,6 +20,11 @@ const createWindow = () => {
             contextIsolation: true,
             preload: path.join(__dirname, 'electron/preload.js')  // Path to the preload script
         }
+    });
+    // Set the window open handler
+    win.webContents.setWindowOpenHandler((details) => {
+        shell.openExternal(details.url); // Open URL in user's browser.
+        return { action: 'deny' }; // Prevent the app from opening the URL.
     });
     // variable for chatGptResponse class instance
     let chatGptResponse;
@@ -71,6 +76,12 @@ const createWindow = () => {
     ipcMain.on('gpt-res-sentence-audio-buffer-to-main', (event, audioBuffer) => {
         console.log('in main', audioBuffer)
         win.webContents.send('gpt-res-sentence-audio-buffer-to-renderer', audioBuffer)
+    })
+
+    ipcMain.on('incorrect-api-key', async () => {
+        console.log('incorrect api key in main')
+        await keytar.deletePassword('ChatGUI', 'openAiApiKey');
+        win.webContents.send('authentication-error')
     })
 
     // Load the main HTML file into the window

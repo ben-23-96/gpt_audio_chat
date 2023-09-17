@@ -7,6 +7,7 @@ const { ChatOpenAI } = require("langchain/chat_models/openai");
 const { PromptTemplate } = require("langchain/prompts");
 const { CallbackManager } = require('langchain/callbacks');
 const { ConversationSummaryMemory, } = require("langchain/memory");
+const { ipcMain } = require('electron');  // Electron's IPC (Inter-Process Communication) for main process
 
 class ChatGPTResponse {
     constructor(apiKey) {
@@ -53,19 +54,27 @@ class ChatGPTResponse {
             Human: {input}
             AI:`);
 
-        const chat = new ChatOpenAI({ openAIApiKey: this.apiKey, streaming: true, callbackManager });
+        try {
+            const chat = new ChatOpenAI({ openAIApiKey: this.apiKey, streaming: true, callbackManager });
 
-        const chain = new ConversationChain({
-            prompt: chatPrompt,
-            llm: chat,
-            memory: this.memory
-        });
+            const chain = new ConversationChain({
+                prompt: chatPrompt,
+                llm: chat,
+                memory: this.memory
+            });
 
-        const aiResponse = await chain.call({
-            input: prompt
-        });
+            const aiResponse = await chain.call({
+                input: prompt
+            });
 
-        this.sentenceText = ""
+            this.sentenceText = ""
+        } catch (error) {
+            console.error(error)
+            if (error.code === 'invalid_api_key') {
+                console.log('incorrect api key')
+                ipcMain.emit('incorrect-api-key');
+            }
+        }
     }
 
     /**
