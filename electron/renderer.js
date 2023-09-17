@@ -213,6 +213,7 @@ const audioPlayer = new AudioPlayer()
 // Add an event listener to the element with the ID 'startRecording'
 // When the element is clicked, the record function from the electronAPI is triggered
 document.getElementById('startRecordingButton').addEventListener('click', () => {
+    document.getElementById('transcriptionOutput').innerText = "";
     window.electronAPI.record();
     audioPlayer.visualizeMicAudio()
 });
