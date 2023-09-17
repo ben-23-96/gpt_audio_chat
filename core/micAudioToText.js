@@ -49,7 +49,7 @@ async function convertMicAudioToText() {
                 silenceTimeout = setTimeout(() => {
                     console.log('end triggered');
                     audioStream.end();
-                }, 3000);
+                }, 1500);
             }
         })
         .on('error', error => {
