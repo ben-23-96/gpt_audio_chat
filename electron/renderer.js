@@ -238,3 +238,13 @@ window.electronAPI.onAudioBuffer(async (audioData) => {
         audioPlayer.playAudio();
     }
 });
+
+window.electronAPI.onAuthenticationError(() => {
+    const apiFormContainer = document.getElementById('api-key-form-container');
+    const mainGuiContainer = document.getElementById('main-gui-container');
+    let errorText = document.getElementById('api-key-error-message')
+    errorText.innerText += "\n\nThere was a error with your API key. Please check and input again."
+    mainGuiContainer.style.display = 'none';
+    apiFormContainer.style.display = 'block';
+    audioPlayer.stopVisualizeMicAudio()
+})

@@ -49,5 +49,11 @@ contextBridge.exposeInMainWorld(
             callback(audioBuffer);  // Execute the provided callback with the received transcription
         });
     },
+    onAuthenticationError: (callback) => {
+        ipcRenderer.on('authentication-error', () => {
+            console.log('in renderer incorrect api key')
+            callback()
+        })
+    }
 }
 );
