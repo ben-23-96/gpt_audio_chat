@@ -19,9 +19,9 @@
     "axios": "^1.4.0",
     "debug": "^4.3.4",
     "dotenv": "^16.3.1",
+    "keytar": "^7.9.0",
     "langchain": "^0.0.146",
     "node-record-lpcm16": "^1.0.1",
-    "openai": "^4.5.0",
     "pcm-volume": "^1.0.0"
   },
   "devDependencies": {
