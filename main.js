@@ -1,10 +1,11 @@
 require('dotenv').config();
 
 // Import required modules
-const { app, ipcMain, BrowserWindow } = require('electron');  // Electron core modules
+const { app, ipcMain, BrowserWindow, shell } = require('electron');  // Electron core modules
 const convertMicAudioToText = require('./core/micAudioToText');  // Custom module for speech-to-text functionality
 const ChatGPTResponse = require('./core/gptResponse')
 const path = require('path');  // Node.js path module
+const keytar = require('keytar');
 
 /**
  * Creates a new Electron window and sets up IPC handlers.
@@ -15,13 +16,47 @@ const createWindow = () => {
         width: 800,
         height: 600,
         webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
             preload: path.join(__dirname, 'electron/preload.js')  // Path to the preload script
         }
     });
-    const chatGptResponse = new ChatGPTResponse()
+    // Set the window open handler
+    win.webContents.setWindowOpenHandler((details) => {
+        shell.openExternal(details.url); // Open URL in user's browser.
+        return { action: 'deny' }; // Prevent the app from opening the URL.
+    });
+    // variable for chatGptResponse class instance
+    let chatGptResponse;
+
+    // IPC handler to set the users openai apikey
+    ipcMain.handle('set-api-key', async (event, apiKey) => {
+        // store the users apikey
+        await keytar.setPassword('ChatGUI', 'openAiApiKey', apiKey);
+        // set variable to chatgptresponse class instance with user apikey
+        chatGptResponse = new ChatGPTResponse(apiKey)
+    });
+
+    // IPC handler to retrieve the users api key if it exists and send to the renderer process
+    ipcMain.handle('get-api-key', async () => {
+        // retrieve the users apikey
+        const apiKey = await keytar.getPassword('ChatGUI', 'openAiApiKey');
+        if (apiKey === null) {
+            console.log('No API Key found.');
+        } else {
+            // set variable to chatgptresponse class instance with user apikey
+            chatGptResponse = new ChatGPTResponse(apiKey)
+        }
+        return apiKey
+    });
 
     // IPC handler to start recording microphone audio and convert it to text when 'record' event is received
     ipcMain.handle('record', convertMicAudioToText);
+
+    // IPC handler to start a new conversation, clears the chat memory
+    ipcMain.handle('new-conversation', async (event, arg) => {
+        chatGptResponse.clearChatMemory()
+    })
 
     // IPC listener for 'mic-audio-transcription-to-main' event from speechToText
     ipcMain.on('mic-audio-transcription-to-main', (event, transcription) => {
@@ -41,6 +76,12 @@ const createWindow = () => {
     ipcMain.on('gpt-res-sentence-audio-buffer-to-main', (event, audioBuffer) => {
         console.log('in main', audioBuffer)
         win.webContents.send('gpt-res-sentence-audio-buffer-to-renderer', audioBuffer)
+    })
+
+    ipcMain.on('incorrect-api-key', async () => {
+        console.log('incorrect api key in main')
+        await keytar.deletePassword('ChatGUI', 'openAiApiKey');
+        win.webContents.send('authentication-error')
     })
 
     // Load the main HTML file into the window

@@ -1,0 +1,29 @@
+#main-gui-container {
+    display: none;
+}
+
+#api-key-form-container {
+    display: none;
+}
+
+body {
+    background-color: #f8fa91;
+    font-size: 18px;
+    overflow: hidden;
+}
+
+audio {
+    display: none;
+    /* Hide audio player */
+}
+
+#transcriptionOutput {
+    min-height: 50px;
+    /* Set minimum height to prevent button movement */
+}
+
+/* Increase canvas size */
+canvas {
+    width: 400px;
+    height: 200px;
+}
