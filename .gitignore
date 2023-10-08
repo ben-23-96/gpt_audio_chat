@@ -2,3 +2,6 @@ plan.txt
 node_modules
 .env
 credentials.json
+bin
+dist
+gpt_icon.ico
