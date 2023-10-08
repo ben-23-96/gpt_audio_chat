@@ -5,7 +5,28 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron main.js"
+    "start": "electron main.js",
+    "build-installer": "electron-builder"
+  },
+  "build": {
+    "appId": "gpt_audio_chat.id",
+    "productName": "Bens AI Voice Assistant",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "gpt_icon.ico"
+    },
+    "extraResources": [
+      {
+        "from": "./bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
   },
   "repository": {
     "type": "git",
@@ -25,6 +46,7 @@
     "pcm-volume": "^1.0.0"
   },
   "devDependencies": {
-    "electron": "^25.5.0"
+    "electron": "^25.5.0",
+    "electron-builder": "^24.6.4"
   }
 }
