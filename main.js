@@ -4,8 +4,12 @@ require('dotenv').config();
 const { app, ipcMain, BrowserWindow, shell } = require('electron');  // Electron core modules
 const convertMicAudioToText = require('./core/micAudioToText');  // Custom module for speech-to-text functionality
 const ChatGPTResponse = require('./core/gptResponse')
+const BinPath = require("./build_scripts/addBinToPath")
 const path = require('path');  // Node.js path module
 const keytar = require('keytar');
+
+// set Google credentials
+process.env['GOOGLE_APPLICATION_CREDENTIALS'] = path.join(__dirname, 'credentials.json');
 
 /**
  * Creates a new Electron window and sets up IPC handlers.
@@ -13,6 +17,8 @@ const keytar = require('keytar');
 const createWindow = () => {
     // Create a new browser window with specified dimensions and configurations
     const win = new BrowserWindow({
+        titleBarStyle: 'hidden',
+        titleBarOverlay: true,
         width: 800,
         height: 600,
         webPreferences: {
@@ -21,11 +27,13 @@ const createWindow = () => {
             preload: path.join(__dirname, 'electron/preload.js')  // Path to the preload script
         }
     });
-    // Set the window open handler
-    win.webContents.setWindowOpenHandler((details) => {
-        shell.openExternal(details.url); // Open URL in user's browser.
-        return { action: 'deny' }; // Prevent the app from opening the URL.
-    });
+
+    // add sox binaries to path, for use in the packaged version for the windows installer
+    if (process.platform === 'win32') {
+        const binPath = new BinPath()
+        binPath.checkExecutableOnPath()
+    }
+
     // variable for chatGptResponse class instance
     let chatGptResponse;
 
