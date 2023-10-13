@@ -32,21 +32,19 @@ class TextToSpeech {
         console.log(this.textQueue);
         // Set the processing flag to true
         this.isProcessing = true;
-        // Return and remove the first text from queue
-        const text = this.textQueue.shift();
         // Convert text to audio
-        this.convertTextToAudio(text);
+        this.convertTextToAudio();
         // Reset the processing flag to false
         this.isProcessing = false;
-        // process next item in queue with recursive call
-        await this.processQueue()
     }
 
     /**
     * Converts the provided text into audio using Google Cloud Text-to-Speech API.
     * @param {string} text - The text to be converted to audio.
     */
-    async convertTextToAudio(text) {
+    async convertTextToAudio() {
+        // Return and remove the first text from queue
+        const text = this.textQueue.shift();
         // Configuration for the Google Cloud Text-to-Speech API request
         const request = {
             input: { text: text },

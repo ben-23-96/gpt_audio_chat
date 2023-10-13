@@ -4,6 +4,7 @@ require('dotenv').config();
 const { app, ipcMain, BrowserWindow, shell } = require('electron');  // Electron core modules
 const convertMicAudioToText = require('./core/micAudioToText');  // Custom module for speech-to-text functionality
 const ChatGPTResponse = require('./core/gptResponse')
+const TextToSpeech = require('./core/textToSpeech')
 const BinPath = require("./build_scripts/addBinToPath")
 const path = require('path');  // Node.js path module
 const keytar = require('keytar');
@@ -34,6 +35,7 @@ const createWindow = () => {
         binPath.checkExecutableOnPath()
     }
 
+    const textToSpeech = new TextToSpeech()
     // variable for chatGptResponse class instance
     let chatGptResponse;
 
@@ -58,12 +60,25 @@ const createWindow = () => {
         return apiKey
     });
 
+    // if api key provided does not work send notifcation to frontend renderer
+    ipcMain.on('incorrect-api-key', async () => {
+        console.log('incorrect api key in main')
+        await keytar.deletePassword('ChatGUI', 'openAiApiKey');
+        win.webContents.send('authentication-error')
+    })
+
     // IPC handler to start recording microphone audio and convert it to text when 'record' event is received
     ipcMain.handle('record', convertMicAudioToText);
 
     // IPC handler to start a new conversation, clears the chat memory
     ipcMain.handle('new-conversation', async (event, arg) => {
         chatGptResponse.clearChatMemory()
+    })
+
+    // IPC handler, when audio buffer added to queue on frontend, processes queue on backend to convert text to audio and send to frontend
+    ipcMain.handle('process-audio', () => {
+        console.log('process-audio in main')
+        chatGptResponse.textToSpeech.processQueue()
     })
 
     // IPC listener for 'mic-audio-transcription-to-main' event from speechToText
@@ -84,12 +99,6 @@ const createWindow = () => {
     ipcMain.on('gpt-res-sentence-audio-buffer-to-main', (event, audioBuffer) => {
         console.log('in main', audioBuffer)
         win.webContents.send('gpt-res-sentence-audio-buffer-to-renderer', audioBuffer)
-    })
-
-    ipcMain.on('incorrect-api-key', async () => {
-        console.log('incorrect api key in main')
-        await keytar.deletePassword('ChatGUI', 'openAiApiKey');
-        win.webContents.send('authentication-error')
     })
 
     // Load the main HTML file into the window

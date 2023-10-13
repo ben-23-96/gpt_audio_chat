@@ -96,6 +96,8 @@ class AudioPlayer {
             } else {
                 // Set the playing flag to false if the queue is empty
                 this.isPlaying = false;
+                // send emitter to main process to send next sentence audio buffer
+                window.electronAPI.processBackendAudioQueue()
             }
         };
     }
@@ -234,12 +236,15 @@ window.electronAPI.onAudioBuffer(async (audioData) => {
     audioPlayer.stopVisualizeMicAudio()
     // add audio buffer to queue
     audioPlayer.audioQueue.push(audioData);
+    // send emitter to main process to send next sentence audio buffer
+    window.electronAPI.processBackendAudioQueue()
     // If not currently playing, start playback
     if (!audioPlayer.isPlaying) {
         audioPlayer.playAudio();
     }
 });
 
+// if open ai api key has not worked alter display and notify user
 window.electronAPI.onAuthenticationError(() => {
     const apiFormContainer = document.getElementById('api-key-form-container');
     const mainGuiContainer = document.getElementById('main-gui-container');
