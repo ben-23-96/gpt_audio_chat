@@ -76,7 +76,7 @@ const createWindow = () => {
     })
 
     // IPC handler, when audio buffer added to queue on frontend, processes queue on backend to convert text to audio and send to frontend
-    ipcMain.handle('process-audio', () => {
+    ipcMain.handle('process-backend-audio', () => {
         console.log('process-audio in main')
         chatGptResponse.textToSpeech.processQueue()
     })
