@@ -15,6 +15,8 @@ class ChatGPTResponse {
         this.textToSpeech = new TextToSpeech()
         // attribute to accumulate received text
         this.sentenceText = ""
+        // bool set to check if is the first sentence of the gpt response
+        this.firstSentence = true
         // user openai api key
         this.apiKey = apiKey
         // chat memory store that summarizes previous messages
@@ -32,6 +34,10 @@ class ChatGPTResponse {
 
         // function to be called on chatgpt stream response 
         const callbackManager = CallbackManager.fromHandlers({
+            handleLLMStart: async () => {
+                console.log('start of stream')
+                this.firstSentence = true
+            },
             handleLLMNewToken: async (token) => {
                 console.log(token);
                 // add streamed response to sentence
@@ -41,8 +47,16 @@ class ChatGPTResponse {
                     console.log('To be sent to text to speech:', this.sentenceText);
                     this.textToSpeech.textQueue.push(this.sentenceText);
                     this.sentenceText = "";
-                    this.textToSpeech.processQueue();
+                    // if first sentence begin processing the text to speech conversion queue, set first sentence flag to false
+                    if (this.firstSentence) {
+                        this.firstSentence = false
+                        this.textToSpeech.processQueue()
+                    }
                 }
+            },
+            handleLLMEnd: async () => {
+                console.log('end of stream')
+                this.firstSentence = true
             }
         })
         // create prompt template to be sent to gpt
