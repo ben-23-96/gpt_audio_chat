@@ -49,6 +49,13 @@ contextBridge.exposeInMainWorld(
             callback(audioBuffer);  // Execute the provided callback with the received transcription
         });
     },
+    /**
+     * sends a request to main to send the next sentence audio buffer to renderer
+     */
+    processBackendAudioQueue: () => ipcRenderer.invoke('process-backend-audio'),
+    /**
+     * if openai api key has not authenticated correctly trigger callback to notify user
+     */
     onAuthenticationError: (callback) => {
         ipcRenderer.on('authentication-error', () => {
             console.log('in renderer incorrect api key')
