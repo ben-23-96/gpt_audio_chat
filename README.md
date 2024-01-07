@@ -20,3 +20,8 @@ Working version for Windows is 14.4.1. You can download the binaries or use choc
 ```
 choco install sox.portable
 ```
+
+Then to run
+```
+npm start
+```
