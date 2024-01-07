@@ -4,7 +4,7 @@ A GUI built using electron. It captures an audio prompt from the user via a micr
 
 ## Prerequisites
 
-To run this application, you need to install SoX and ensure it is available in your $PATH.
+Requires a credentials.json file to run Google-cloud text-to-speech and speech-to-text API's. To run this application, you need to install SoX and ensure it is available in your $PATH.
 
 ### For Mac OS
 
